@@ -11,7 +11,10 @@ torch = "*"
 torchvision = "*"
 gym = "*"
 tensorflow = "*"
-tensorboard-logger = "*"
+stable-baselines = "*"
+jupyter = "*"
+seaborn = "*"
+pandas = "*"
 
 [requires]
 python_version = "3.6"
