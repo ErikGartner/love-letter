@@ -32,8 +32,7 @@ def test(rank, args, shared_model, dtype):
     torch.manual_seed(args.seed + rank)
 
     # set up logger
-    timestring = str(date.today()) + '_' + \
-        time.strftime("%Hh-%Mm-%Ss", time.localtime(time.time()))
+    timestring = str(date.today()) + '_' + datetime.datetime.now().strftime('%H-%M-%S')
     run_name = args.save_name + '_' + timestring
     configure("logs/run_" + run_name, flush_secs=5)
 
@@ -71,7 +70,7 @@ def test(rank, args, shared_model, dtype):
         prob = F.softmax(logit)
         action = prob.max(1)[1].data.cpu().numpy()
 
-        state, reward, done, _ = env.step(action[0, 0])
+        state, reward, done, _ = env.step(action[0])
         done = done or episode_length >= args.max_episode_length
         reward_sum += reward
 
@@ -94,7 +93,7 @@ def test(rank, args, shared_model, dtype):
                 path_output = args.save_name + '_max'
                 torch.save(shared_model.state_dict(), path_output)
                 path_now = "{}_{}".format(
-                    args.save_name, datetime.datetime.now().isoformat())
+                    args.save_name, datetime.datetime.now().strftime('%H-%M-%S'))
                 torch.save(shared_model.state_dict(), path_now)
                 max_reward = reward_sum
 

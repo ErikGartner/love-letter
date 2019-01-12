@@ -8,6 +8,7 @@ import torch
 from loveletter.agents.random import AgentRandom
 from loveletter.arena import Arena
 from loveletter.agents.a3c import AgentA3C
+from loveletter.agents.tf_agent import TFAgent
 
 PARSER = argparse.ArgumentParser(
     description='Run the arena with available agents')
@@ -19,6 +20,8 @@ ARGS = PARSER.parse_args()
 
 print('Starting arena')
 A3C_PATH = os.path.join("models", "stated_2017-05-01T22-59-33.510476_best_0.45875")
+SMITH_PATH = "weights.pkl"
+
 dtype = torch.cuda.FloatTensor if torch.cuda.is_available() else torch.FloatTensor
 
 
@@ -28,8 +31,10 @@ ARENA = Arena([
     # second is a lambda that ONLY takes a random seed. This can be discarded
     # if the the Agent does not require a seed
     ("A3C", lambda seed: AgentA3C(A3C_PATH, dtype, seed)),
-    ("Random", lambda seed: AgentRandom(seed))
-], 500)
+    ("Random", lambda seed: AgentRandom(seed)),
+    ("Mr. Smith", lambda seed: TFAgent(SMITH_PATH, seed)),
+    ("Mr. Smith 2", lambda seed: TFAgent('weights_2.pkl', seed))
+], 100)
 
 print('Run the arena for: ', ARENA.csv_header())
 

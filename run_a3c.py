@@ -34,7 +34,7 @@ parser.add_argument('--num-processes', type=int, default=4, metavar='N',
                     help='how many training processes to use (default: 4)')
 parser.add_argument('--num-steps', type=int, default=20, metavar='NS',
                     help='number of forward steps in A3C (default: 20)')
-parser.add_argument('--max-episode-length', type=int, default=10000, metavar='M',
+parser.add_argument('--max-episode-length', type=int, default=1, metavar='M',
                     help='maximum length of an episode (default: 10000)')
 parser.add_argument('--evaluate', action="store_true",
                     help='whether to evaluate results')
@@ -50,7 +50,8 @@ if __name__ == '__main__':
 
     torch.manual_seed(args.seed)
 
-    dtype = torch.cuda.FloatTensor if torch.cuda.is_available() else torch.FloatTensor
+    dtype = torch.cuda.FloatTensor if False else torch.FloatTensor
+    #dtype = torch.cuda.FloatTensor if torch.cuda.is_available() else torch.FloatTensor
 
     env = LoveLetterEnv(AgentRandom(args.seed), args.seed)
     state = env.reset()
@@ -62,6 +63,8 @@ if __name__ == '__main__':
     # train(1,args,shared_model,dtype)
     processes = []
 
+    #train(1, args, shared_model, dtype)
+    #'''
     p = mp.Process(target=test, args=(
         args.num_processes, args, shared_model, dtype))
     p.start()
@@ -75,3 +78,4 @@ if __name__ == '__main__':
             processes.append(p)
     for p in processes:
         p.join()
+    #'''

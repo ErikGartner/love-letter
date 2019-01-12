@@ -47,6 +47,11 @@ class Arena():
         positions)
         """
         wins = 0
+
+        if lambda_01 is lambda_02:
+            # Playing against yourself is nonsensical
+            return 0
+
         for idx in range(games_to_play):
             game = Game.new(4, seed + idx)
             agent_one = (lambda_01)(seed + idx)
@@ -65,6 +70,7 @@ class Arena():
 
             if game.is_winner(0):
                 wins = wins + 1
+        print('%s won against %s %.1f%% of games' % (agent_one, agent_two, wins*100 / games_to_play))
         return wins
 
     @staticmethod
@@ -73,6 +79,7 @@ class Arena():
         Returns fraction of times agent created from lambda_01
         wins over agent created from lambda_02
         """
+
         wins = Arena.compare_agents(lambda_01, lambda_02, games_to_play, seed)
         return wins / games_to_play
 
