@@ -6,10 +6,12 @@ verify_ssl = true
 [dev-packages]
 
 [packages]
-numpy = "==1.12.0"
+numpy = "*"
 torch = "*"
 torchvision = "*"
 gym = "*"
+tensorflow = "*"
+tensorboard-logger = "*"
 
 [requires]
 python_version = "3.6"

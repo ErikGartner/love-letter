@@ -3,6 +3,7 @@ from operator import itemgetter
 import gym
 from gym import spaces
 from gym.utils import seeding
+import numpy as np
 
 from .game import Game
 from .card import Card
@@ -32,19 +33,20 @@ class LoveLetterEnv(gym.Env):
     def __init__(self, agent_other, seed=451):
 
         self.action_space = spaces.Discrete(15)
-        self.observation_space = spaces.Box(low=0, high=1, shape=(24,))
+        self.observation_space = spaces.Box(low=0, high=1, shape=(24,),
+                                            dtype=np.float32)
 
         self._agent_other = AgentRandom(
             seed) if agent_other is None else agent_other
-        self._seed(seed)
-        self._reset()
+        self.seed(seed)
+        self.reset()
         self._game = Game.new(4, self.np_random.random_integers(5000000))
 
-    def _seed(self, seed=None):
+    def seed(self, seed=None):
         self.np_random, seed = seeding.np_random(seed)
         return [seed]
 
-    def _step(self, action):
+    def step(self, action):
         assert self.action_space.contains(action)
 
         player_action = self.action_from_index(action)
@@ -60,7 +62,7 @@ class LoveLetterEnv(gym.Env):
 
         return self._game.state(), reward, done, {"round": self._game.round()}
 
-    def _reset(self):
+    def reset(self):
         self._game = Game.new(4, self.np_random.random_integers(5000000))
         return self._game.state()
 
