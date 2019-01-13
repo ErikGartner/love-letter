@@ -6,6 +6,8 @@ __pycache__/
 # C extensions
 *.so
 
+tensorboard
+
 # Distribution / packaging
 .Python
 env/

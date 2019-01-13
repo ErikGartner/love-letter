@@ -10,10 +10,11 @@ from loveletter.player import PlayerTools, PlayerAction, PlayerActionTools
 class Game():
     """A Love Letter Game"""
 
-    def __init__(self, deck, players, turn_index):
+    def __init__(self, deck, players, turn_index, action_log=[]):
         self._deck = deck
         self._players = players
         self._turn_index = turn_index
+        self._action_log = action_log
 
         total_playing = sum(
             [1 for player in players if PlayerTools.is_playing(player)])
@@ -201,7 +202,8 @@ class Game():
 
         # player is out, increment turn index
         if action.discard == Card.noCard:
-            return Game(self.deck(), self.players(), self.turn_index() + 1)
+            return Game(self.deck(), self.players(), self.turn_index() + 1,
+                        self._action_log)
 
         player = self.player()
         player_hand = [player.hand_card, self._deck[0]]
@@ -227,7 +229,8 @@ class Game():
         # No other logic for handmaids or countess
         if action.discard == Card.handmaid or \
                 action.discard == Card.countess:
-            return Game(deck_new, current_players, self._turn_index + 1)
+            return Game(deck_new, current_players, self._turn_index + 1,
+                        [*self._action_log, action])
 
         if action.discard == Card.guard:
             return self._move_guard(current_players, action, deck_new)
@@ -254,7 +257,8 @@ class Game():
             current_players = Game._set_player(
                 current_players, player_target, action.player_target)
 
-        return Game(deck_new, current_players, self._turn_index + 1)
+        return Game(deck_new, current_players, self._turn_index + 1,
+                    [*self._action_log, action])
 
     def _move_priest(self, action, player_hand_new, deck_new):
         """
@@ -273,7 +277,8 @@ class Game():
         current_players = Game._set_player(
             self._players, player, self.player_turn())
 
-        return Game(deck_new, current_players, self._turn_index + 1)
+        return Game(deck_new, current_players, self._turn_index + 1,
+                    [*self._action_log, action])
 
     def _move_baron(self, action, current_players, player_hand_new, deck_new):
         """
@@ -297,7 +302,8 @@ class Game():
             current_players = Game._set_player(
                 current_players, player, self.player_turn())
 
-        return Game(deck_new, current_players, self._turn_index + 1)
+        return Game(deck_new, current_players, self._turn_index + 1,
+                    [*self._action_log, action])
 
     def _move_prince(self, current_players, action, deck_new):
         """Handle a prince action into a new game state"""
@@ -306,7 +312,8 @@ class Game():
 
         # if there are no more cards, this has no effect
         if len(deck_new) - 1 < 1:
-            return Game(deck_new, current_players, self._turn_index + 1)
+            return Game(deck_new, current_players, self._turn_index + 1,
+                        [*self._action_log, action])
 
         if player_before_discard.hand_card == Card.princess:
             player_post_discard = PlayerTools.force_discard(
@@ -320,7 +327,8 @@ class Game():
         current_players = Game._set_player(
             current_players, player_post_discard, action.player_target)
 
-        return Game(deck_final, current_players, self._turn_index + 1)
+        return Game(deck_final, current_players, self._turn_index + 1,
+                    [*self._action_log, action])
 
     def _move_king(self, current_players, action, deck_new):
         """Handle a king action into a new game state"""
@@ -335,7 +343,8 @@ class Game():
         current_players = Game._set_player(
             current_players, target_new, action.player_target)
 
-        return Game(deck_new, current_players, self._turn_index + 1)
+        return Game(deck_new, current_players, self._turn_index + 1,
+                    [*self._action_log, action])
 
     def _move_princess(self, dealt_card, new_deck):
         """Handle a princess action into a new game state"""
@@ -343,7 +352,8 @@ class Game():
         player = PlayerTools.force_discard(player)
         current_players = Game._set_player(
             self._players, player, self.player_turn())
-        return Game(new_deck, current_players, self._turn_index + 1)
+        return Game(new_deck, current_players, self._turn_index + 1,
+                    [*self._action_log, action])
 
     def is_action_valid(self, action):
         """Tests if an action is valid given the current game state"""
@@ -448,4 +458,4 @@ class Game():
         undealt_cards = deck[player_count:]
 
         players = list(map(PlayerTools.blank, dealt_cards))
-        return Game(undealt_cards, players, 0)
+        return Game(undealt_cards, players, 0, [])
