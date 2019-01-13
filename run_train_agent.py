@@ -17,9 +17,7 @@ from loveletter.trainers.a3c_model import ActorCritic
 from loveletter.trainers.a3c_train import train
 from loveletter.trainers.a3c_test import test
 
-# Based on
-# https://github.com/pytorch/examples/tree/master/mnist_hogwild
-# Training settings
+
 parser = argparse.ArgumentParser(description='RL for Love Letter')
 parser.add_argument('--lr', type=float, default=0.0001, metavar='LR',
                     help='learning rate (default: 0.0001)')
@@ -28,7 +26,9 @@ parser.add_argument('--seed', type=int, default=1, metavar='S',
 parser.add_argument('--num-processes', type=int, default=4, metavar='N',
                     help='how many training processes to use (default: 4)')
 parser.add_argument('--num-steps', type=int, default=20, metavar='NS',
-                    help='number of forward steps in A3C (default: 20)')
+                    help='number of forward steps for update (default: 20)')
+parser.add_argument('--total-steps', type=int, default=1e6, metavar='NS',
+                    help='number of total steps (default: 1M)')
 parser.add_argument('--save-name', metavar='FN', default='default_model',
                     help='path/prefix for the filename to save shared model\'s parameters')
 parser.add_argument('--load-name', default=None, metavar='SN',
@@ -36,8 +36,6 @@ parser.add_argument('--load-name', default=None, metavar='SN',
 
 
 def callback(local, globa):
-    #print(local)
-    #print(globa)
     return True
 
 if __name__ == '__main__':
@@ -55,12 +53,12 @@ if __name__ == '__main__':
                  verbose=0,
                  tensorboard_log="./tensorboard/",
                  learning_rate=args.lr,
-                 n_steps=args.num_steps)
+                 num_steps=args.num_steps)
 
     if args.load_name:
         model.load(args.load_name)
 
-    model.learn(total_timesteps=1000000,
+    model.learn(total_timesteps=args.total_steps,
                 callback=callback,
                 tb_log_name='PPO2 %s' % datetime.datetime.now().strftime('%H-%M-%S'))
     model.save(args.save_name)
