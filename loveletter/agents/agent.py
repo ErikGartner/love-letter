@@ -30,21 +30,21 @@ class Agent():
         opponents = game.opponent_turn()
 
         actions_possible = [
-            PlayerAction(Card.guard, random.choice(opponents), Card.priest, Card.noCard),
-            PlayerAction(Card.guard, random.choice(opponents), Card.baron, Card.noCard),
-            PlayerAction(Card.guard, random.choice(opponents), Card.handmaid, Card.noCard),
-            PlayerAction(Card.guard, random.choice(opponents), Card.prince, Card.noCard),
-            PlayerAction(Card.guard, random.choice(opponents), Card.king, Card.noCard),
-            PlayerAction(Card.guard, random.choice(opponents), Card.countess, Card.noCard),
-            PlayerAction(Card.guard, random.choice(opponents), Card.princess, Card.noCard),
-            PlayerAction(Card.priest, random.choice(opponents), Card.noCard, Card.noCard),
-            PlayerAction(Card.baron, random.choice(opponents), Card.noCard, Card.noCard),
-            PlayerAction(Card.king, random.choice(opponents), Card.noCard, Card.noCard),
-            PlayerAction(Card.prince, random.choice(opponents), Card.noCard, Card.noCard),
-            PlayerAction(Card.prince, player_self, Card.noCard, Card.noCard),
-            PlayerAction(Card.handmaid, player_self, Card.noCard, Card.noCard),
-            PlayerAction(Card.countess, player_self, Card.noCard, Card.noCard),
-            PlayerAction(Card.princess, player_self, Card.noCard, Card.noCard)
+            PlayerAction(Card.guard, random.choice(opponents), Card.priest, Card.noCard, Card.noCard, player_self, 0),
+            PlayerAction(Card.guard, random.choice(opponents), Card.baron, Card.noCard, Card.noCard, player_self, 0),
+            PlayerAction(Card.guard, random.choice(opponents), Card.handmaid, Card.noCard, Card.noCard, player_self, 0),
+            PlayerAction(Card.guard, random.choice(opponents), Card.prince, Card.noCard, Card.noCard, player_self, 0),
+            PlayerAction(Card.guard, random.choice(opponents), Card.king, Card.noCard, Card.noCard, player_self, 0),
+            PlayerAction(Card.guard, random.choice(opponents), Card.countess, Card.noCard, Card.noCard, player_self, 0),
+            PlayerAction(Card.guard, random.choice(opponents), Card.princess, Card.noCard, Card.noCard, player_self, 0),
+            PlayerAction(Card.priest, random.choice(opponents), Card.noCard, Card.noCard, Card.noCard, player_self, 0),
+            PlayerAction(Card.baron, random.choice(opponents), Card.noCard, Card.noCard, Card.noCard, player_self, 0),
+            PlayerAction(Card.king, random.choice(opponents), Card.noCard, Card.noCard, Card.noCard, player_self, 0),
+            PlayerAction(Card.prince, random.choice(opponents), Card.noCard, Card.noCard, Card.noCard, player_self, 0),
+            PlayerAction(Card.prince, player_self, Card.noCard, Card.noCard, Card.noCard, player_self, 0),
+            PlayerAction(Card.handmaid, player_self, Card.noCard, Card.noCard, Card.noCard, player_self, 0),
+            PlayerAction(Card.countess, player_self, Card.noCard, Card.noCard, Card.noCard, player_self, 0),
+            PlayerAction(Card.princess, player_self, Card.noCard, Card.noCard, Card.noCard, player_self, 0)
         ]
         actions = [action for action in actions_possible if game.is_action_valid(action)]
 

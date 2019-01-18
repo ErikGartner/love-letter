@@ -170,7 +170,56 @@ class Game():
 
         returns numpy float 1d of length 24
         """
-        return np.concatenate([self.state_hand(), self.consumed_cards()])
+        state = np.concatenate([self.state_hand(), self.consumed_cards(),
+                                self.state_action_log()])
+        return state
+
+    def state_action_log(self, observing_player=None):
+        if observing_player is None:
+            observing_player = self.player_turn()
+        #print(self.player_turn())
+        log = list(reversed([self.action_to_np(action, observing_player)
+                        for action in self._action_log]))
+        if len(log) == 0:
+            return np.zeros(15 * 88)
+        padded_log = np.pad(np.array(log), ((0, 15 - len(self._action_log)), (0, 0)),
+                            'constant').flatten()
+        return padded_log
+
+    def action_to_np(self, action, observing_player):
+
+        player = np.zeros(4)
+        # Relative player index (maybe?)
+        player_index = (action.player - observing_player) % len(self._players)
+        player[player_index] = 1
+
+        played_card = np.zeros(8)
+        played_card[action.discard - 1] = 1
+
+        target = np.zeros(4)
+        target_index = (action.player_target - observing_player) % len(self._players)
+        target[target_index] = 1
+
+        guessed_card = np.zeros(8)
+        if action.guess > 0:
+            guessed_card[action.guess - 1] = 1
+
+        force_discard = np.zeros(32)
+        if action.force_discarded > 0:
+            i = (action.force_discarder - observing_player) % len(self._players)
+            force_discard[i*8 + action.force_discarded-1] = 1
+
+        revealed_card = np.zeros(32)
+        if action.revealed_card > 0:
+            i = (action.player_target - observing_player) % len(self._players)
+            revealed_card[i*8 + action.revealed_card-1] = 1
+
+        log_bits = np.concatenate([player, played_card, target, guessed_card,
+                                   force_discard, revealed_card])
+        #print(action, log_bits, action.player, observing_player)
+        return log_bits
+
+
 
     def _reward(self, game, action):
         """
@@ -197,6 +246,8 @@ class Game():
         """Current player makes an action.
 
         Returns (NewGame and Reward)<Game,int>"""
+
+
         if self.over() or not self.is_action_valid(action):
             return self._invalid_input(throw)
 
@@ -229,8 +280,9 @@ class Game():
         # No other logic for handmaids or countess
         if action.discard == Card.handmaid or \
                 action.discard == Card.countess:
+            action_updated = action._replace(player=self.player_turn())
             return Game(deck_new, current_players, self._turn_index + 1,
-                        [*self._action_log, action])
+                        [*self._action_log, action_updated])
 
         if action.discard == Card.guard:
             return self._move_guard(current_players, action, deck_new)
@@ -257,8 +309,9 @@ class Game():
             current_players = Game._set_player(
                 current_players, player_target, action.player_target)
 
+        action_updated = action._replace(player=self.player_turn())
         return Game(deck_new, current_players, self._turn_index + 1,
-                    [*self._action_log, action])
+                    [*self._action_log, action_updated])
 
     def _move_priest(self, action, player_hand_new, deck_new):
         """
@@ -269,16 +322,18 @@ class Game():
         player_targets_card = Card.noCard if \
             PlayerTools.is_defended(self._players[action.player_target]) \
             else self._players[action.player_target].hand_card
-        action_updated = PlayerAction(
-            action.discard, action.player_target, action.guess, player_targets_card)
+
+        action_updated = action._replace(player=self.player_turn(),
+                                         revealed_card=player_targets_card)
 
         player = PlayerTools.move(
             self.player(), player_hand_new, action_updated)
         current_players = Game._set_player(
             self._players, player, self.player_turn())
 
+
         return Game(deck_new, current_players, self._turn_index + 1,
-                    [*self._action_log, action])
+                    [*self._action_log, action_updated])
 
     def _move_baron(self, action, current_players, player_hand_new, deck_new):
         """
@@ -295,25 +350,35 @@ class Game():
                     self._players[action.player_target])
                 current_players = Game._set_player(
                     current_players, player_target, action.player_target)
+                action_updated = action._replace(player=self.player_turn(),
+                                                 force_discarded=card_target,
+                                                 force_discarder=action.player_target)
+            else:
+                action_updated = action._replace(player=self.player_turn())
         else:
             # player is eliminated
             player = PlayerTools.force_discard(self.player(), player_hand_new)
             player = PlayerTools.force_discard(player)
             current_players = Game._set_player(
                 current_players, player, self.player_turn())
+            action_updated = action._replace(player=self.player_turn(),
+                                             force_discarded=player_hand_new,
+                                             force_discarder=action.player)
 
         return Game(deck_new, current_players, self._turn_index + 1,
-                    [*self._action_log, action])
+                    [*self._action_log, action_updated])
 
     def _move_prince(self, current_players, action, deck_new):
         """Handle a prince action into a new game state"""
 
         player_before_discard = current_players[action.player_target]
-
+        action_updated = action._replace(player=self.player_turn(),
+                                         force_discarded=player_before_discard.hand_card,
+                                         force_discarder=action.player_target)
         # if there are no more cards, this has no effect
         if len(deck_new) - 1 < 1:
             return Game(deck_new, current_players, self._turn_index + 1,
-                        [*self._action_log, action])
+                        [*self._action_log, action_updated])
 
         if player_before_discard.hand_card == Card.princess:
             player_post_discard = PlayerTools.force_discard(
@@ -328,7 +393,7 @@ class Game():
             current_players, player_post_discard, action.player_target)
 
         return Game(deck_final, current_players, self._turn_index + 1,
-                    [*self._action_log, action])
+                    [*self._action_log, action_updated])
 
     def _move_king(self, current_players, action, deck_new):
         """Handle a king action into a new game state"""
@@ -343,8 +408,10 @@ class Game():
         current_players = Game._set_player(
             current_players, target_new, action.player_target)
 
+        action_updated = action._replace(player=self.player_turn())
+
         return Game(deck_new, current_players, self._turn_index + 1,
-                    [*self._action_log, action])
+                    [*self._action_log, action_updated])
 
     def _move_princess(self, dealt_card, action, new_deck):
         """Handle a princess action into a new game state"""
@@ -352,8 +419,9 @@ class Game():
         player = PlayerTools.force_discard(player)
         current_players = Game._set_player(
             self._players, player, self.player_turn())
+        action_updated = action._replace(player=self.player_turn())
         return Game(new_deck, current_players, self._turn_index + 1,
-                    [*self._action_log, action])
+                    [*self._action_log, action_updated])
 
     def is_action_valid(self, action):
         """Tests if an action is valid given the current game state"""

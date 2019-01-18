@@ -18,11 +18,14 @@ from loveletter.card import Card
 #  player_target - int targeted player id
 #  guess - int card guess being made - only useful if discard is 1 (guard), otherwise 0
 #  revealed_card - int card of player_target - only useful if discard is 2 (priest), otherwise 0
+#  force_discarded - int id of card discarded after being the target of baron/prince/guard
+#  player - int id of the player executing the action
+#  force_discarder - int id of the player that lost as a result of the action
 #
 # Note that the discarding player is a valid target and that is the only
 # valid target for the non-effecting cards (ie handmaid or countess)
 PlayerAction = namedtuple(
-    'PlayerAction', 'discard player_target guess revealed_card')
+    'PlayerAction', 'discard player_target guess revealed_card force_discarded player force_discarder')
 
 
 class PlayerActionTools():
@@ -34,14 +37,14 @@ class PlayerActionTools():
         Generate a blank action (un-taken turn, either because the
         game is in progress or the player is knocked out
         """
-        return PlayerAction(0, 0, 0, 0)
+        return PlayerAction(0, 0, 0, 0, 0, 0, 0)
 
     @staticmethod
     def simple(card):
         """
         Generate an action to just discard, no effects
         """
-        return PlayerAction(card, 0, 0, 0)
+        return PlayerAction(card, 0, 0, 0, 0, 0, 0)
 
     @staticmethod
     def is_blank(action):
@@ -49,7 +52,10 @@ class PlayerActionTools():
         return action.discard == 0 and \
             action.player_target == 0 and \
             action.guess == 0 and \
-            action.revealed_card == 0
+            action.revealed_card == 0 and \
+            action.force_discarded == 0 and \
+            action.player == 0 and \
+            action.force_discarder == 0
 
     @staticmethod
     def to_str(action):
@@ -60,7 +66,7 @@ class PlayerActionTools():
     @staticmethod
     def from_np(arr):
         """Convert a player action tuple into a numpy array."""
-        return PlayerAction(arr[0], arr[1], arr[2], arr[3])
+        return PlayerAction(arr[0], arr[1], arr[2], arr[3], arr[4], arr[5], arr[6])
 
     @staticmethod
     def to_np(player_action):
@@ -71,14 +77,14 @@ class PlayerActionTools():
     def from_np_many(player_actions):
         """Convert a player action tuple into a numpy array."""
         actions_split = np.reshape(
-            player_actions, (player_actions.shape[0] // 4, 4))
+            player_actions, (player_actions.shape[0] // 7, 7))
         return list(map(PlayerActionTools.from_np, actions_split))
 
     @staticmethod
     def to_np_many(player_actions):
         """Convert a player action tuple into a numpy array."""
         actions = np.array(player_actions, dtype=np.uint8)
-        return np.reshape(actions, len(player_actions) * 4)
+        return np.reshape(actions, len(player_actions) * 7)
 
 # A Love Letter Player
 #

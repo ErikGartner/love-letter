@@ -14,7 +14,7 @@ from .agents.random import AgentRandom
 class LoveLetterEnv(gym.Env):
     """Love Letter Game Environment
 
-    The goal of hotter colder is to guess closer to a randomly selected number
+    The goal of hotter colder is to guess cforce_discarder to a randomly selected number
 
     After each step the agent receives an observation of:
     0 - No guess yet submitted (only after reset)
@@ -33,7 +33,7 @@ class LoveLetterEnv(gym.Env):
     def __init__(self, agent_other, seed=451):
 
         self.action_space = spaces.Discrete(15)
-        self.observation_space = spaces.Box(low=0, high=1, shape=(24,),
+        self.observation_space = spaces.Box(low=0, high=1, shape=(1344,),
                                             dtype=np.float32)
 
         self._agent_other = AgentRandom(
@@ -162,51 +162,51 @@ class LoveLetterEnv(gym.Env):
             PlayerAction(Card.guard,
                          self.np_random.choice(opponents),
                          Card.priest,
-                         Card.noCard),
+                         Card.noCard, Card.noCard, player_self, 0),
             PlayerAction(Card.guard,
                          self.np_random.choice(opponents),
                          Card.baron,
-                         Card.noCard),
+                         Card.noCard, Card.noCard, player_self, 0),
             PlayerAction(Card.guard,
                          self.np_random.choice(opponents),
                          Card.handmaid,
-                         Card.noCard),
+                         Card.noCard, Card.noCard, player_self, 0),
             PlayerAction(Card.guard,
                          self.np_random.choice(opponents),
                          Card.prince,
-                         Card.noCard),
+                         Card.noCard, Card.noCard, player_self, 0),
             PlayerAction(Card.guard,
                          self.np_random.choice(opponents),
                          Card.king,
-                         Card.noCard),
+                         Card.noCard, Card.noCard, player_self, 0),
             PlayerAction(Card.guard,
                          self.np_random.choice(opponents),
                          Card.countess,
-                         Card.noCard),
+                         Card.noCard, Card.noCard, player_self, 0),
             PlayerAction(Card.guard,
                          self.np_random.choice(opponents),
                          Card.princess,
-                         Card.noCard),
+                         Card.noCard, Card.noCard, player_self, 0),
             PlayerAction(Card.priest,
                          self.np_random.choice(opponents),
                          Card.noCard,
-                         Card.noCard),
+                         Card.noCard, Card.noCard, player_self, 0),
             PlayerAction(Card.baron,
                          self.np_random.choice(opponents),
                          Card.noCard,
-                         Card.noCard),
+                         Card.noCard, Card.noCard, player_self, 0),
             PlayerAction(Card.king,
                          self.np_random.choice(opponents),
                          Card.noCard,
-                         Card.noCard),
+                         Card.noCard, Card.noCard, player_self, 0),
             PlayerAction(Card.prince,
                          self.np_random.choice(opponents),
                          Card.noCard,
-                         Card.noCard),
-            PlayerAction(Card.prince, player_self, Card.noCard, Card.noCard),
-            PlayerAction(Card.handmaid, player_self, Card.noCard, Card.noCard),
-            PlayerAction(Card.countess, player_self, Card.noCard, Card.noCard),
-            PlayerAction(Card.princess, player_self, Card.noCard, Card.noCard)
+                         Card.noCard, Card.noCard, player_self, 0),
+            PlayerAction(Card.prince, player_self, Card.noCard, Card.noCard, Card.noCard, player_self, 0),
+            PlayerAction(Card.handmaid, player_self, Card.noCard, Card.noCard, Card.noCard, player_self, 0),
+            PlayerAction(Card.countess, player_self, Card.noCard, Card.noCard, Card.noCard, player_self, 0),
+            PlayerAction(Card.princess, player_self, Card.noCard, Card.noCard, Card.noCard, player_self, 0)
         ]
 
         return actions_possible
