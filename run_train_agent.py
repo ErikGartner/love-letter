@@ -33,7 +33,8 @@ parser.add_argument('--save-name', metavar='FN', default='default_model',
                     help='path/prefix for the filename to save shared model\'s parameters')
 parser.add_argument('--load-name', default=None, metavar='SN',
                     help='path/prefix for the filename to load shared model\'s parameters')
-
+parser.add_argument('--log-dir', default="./tensorboard/", metavar='path',
+                    help='path to the tensorboard log directory')
 
 def callback(local, globa):
     return True
@@ -51,14 +52,15 @@ if __name__ == '__main__':
     model = PPO2(MlpPolicy,
                  env,
                  verbose=0,
-                 tensorboard_log="./tensorboard/",
+                 tensorboard_log=args.log_dir,
                  learning_rate=args.lr,
-                 num_steps=args.num_steps)
+                 n_steps=args.num_steps,
+                 nminibatches=5)
 
     if args.load_name:
         model.load(args.load_name)
 
-    model.learn(total_timesteps=args.total_steps,
+    model.learn(total_timesteps=int(args.total_steps),
                 callback=callback,
                 tb_log_name='PPO2 %s' % datetime.datetime.now().strftime('%H-%M-%S'))
     model.save(args.save_name)
