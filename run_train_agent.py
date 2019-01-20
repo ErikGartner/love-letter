@@ -61,8 +61,7 @@ if __name__ == '__main__':
                  tensorboard_log=args.log_dir,
                  learning_rate=args.lr,
                  n_steps=args.num_steps,
-                 nminibatches=5,
-                 policy_kwargs=policy_kwargs)
+                 nminibatches=5)
 
     if args.load_name:
         model.load(args.load_name)
