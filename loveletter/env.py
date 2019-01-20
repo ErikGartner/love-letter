@@ -11,29 +11,22 @@ from .player import PlayerAction, PlayerTools
 from .agents.random import AgentRandom
 
 
+NBR_PLAYERS = 4
+NBR_ACTIONS = 11 * NBR_PLAYERS + NBR_PLAYERS
+SPACE_SIZE = 1344 + NBR_ACTIONS
+
+REWARD_WIN = 1
+REWARD_LOSE = -1
+REWARD_INVALID_ACTION = -0.25
+
+
 class LoveLetterEnv(gym.Env):
-    """Love Letter Game Environment
-
-    The goal of hotter colder is to guess cforce_discarder to a randomly selected number
-
-    After each step the agent receives an observation of:
-    0 - No guess yet submitted (only after reset)
-    1 - Guess is lower than the target
-    2 - Guess is equal to the target
-    3 - Guess is higher than the target
-
-    The rewards is calculated as:
-    (min(action, self.number) + self.range) / (max(action, self.number) + self.range)
-
-    Ideally an agent will be able to recognize the 'scent' of a higher reward and
-    increase the rate in which is guesses in that direction until the reward reaches
-    its maximum
-    """
+    """Love Letter Game Environment"""
 
     def __init__(self, agent_other, seed=451):
 
-        self.action_space = spaces.Discrete(15)
-        self.observation_space = spaces.Box(low=0, high=1, shape=(1344,),
+        self.action_space = spaces.Discrete(SPACE_SIZE)
+        self.observation_space = spaces.Box(low=0, high=1, shape=(SPACE_SIZE,),
                                             dtype=np.float32)
 
         self._agent_other = AgentRandom(
@@ -51,8 +44,8 @@ class LoveLetterEnv(gym.Env):
 
         player_action = self.action_from_index(action)
 
-        if player_action is None:
-            return self._game.state(), -1, False, {"round": self._game.round()}
+        if player_action is None or not self._game.is_action_valid(player_action):
+            return self._state(), REWARD_INVALID_ACTION, True, {"round": self._game.round()}
 
         self._game, reward = LoveLetterEnv.advance_game(
             self._game, player_action, self._agent_other)
@@ -60,16 +53,27 @@ class LoveLetterEnv(gym.Env):
         done = self._game.over() or not PlayerTools.is_playing(
             self._game.players()[0])
 
-        return self._game.state(), reward, done, {"round": self._game.round()}
+        return self._state(), reward, done, {"round": self._game.round()}
 
     def reset(self):
         self._game = Game.new(4, self.np_random.random_integers(5000000))
-        return self._game.state()
+        return self._state()
 
     def force(self, game):
         """Force the environment to a certain game state"""
         self._game = game
         return game.state()
+
+    def _state(self, game=None):
+        """
+        Gets the current state from game with additional state information.
+        """
+        game = self._game if game is None else game
+
+        action_candidates = self.actions_set(game)
+        actions = [game.is_action_valid(a) for a in self.actions_set(game)]
+        actions = np.array(actions, dtype=np.int8)
+        return np.concatenate([actions, game.state()])
 
     @staticmethod
     def advance_game(game, action, agent):
@@ -82,7 +86,7 @@ class LoveLetterEnv(gym.Env):
         returns <game, reward>
         """
         if not game.is_action_valid(action):
-            return game, -1
+            return game, REWARD_INVALID_ACTION
 
         player_idx = game.player_turn()
         game_current, _ = game.move(action)
@@ -98,9 +102,9 @@ class LoveLetterEnv(gym.Env):
 
         if game_current.over():
             if game_current.winner() == player_idx:
-                return game_current, 15
+                return game_current, REWARD_WIN
             else:
-                return game_current, -5
+                return game_current, REWARD_LOSE
 
         return game_current, 0
 
@@ -111,7 +115,7 @@ class LoveLetterEnv(gym.Env):
 
         return (action, score, idx)
         """
-        if len(scores) != 15:
+        if len(scores) != NBR_ACTIONS:
             raise Exception("Invalid scores length: {}".format(len(scores)))
         game = self._game if game is None else game
 
@@ -158,55 +162,61 @@ class LoveLetterEnv(gym.Env):
         player_self = game.player_turn()
         opponents = game.opponent_turn()
 
-        actions_possible = [
-            PlayerAction(Card.guard,
-                         self.np_random.choice(opponents),
-                         Card.priest,
-                         Card.noCard, Card.noCard, player_self, 0),
-            PlayerAction(Card.guard,
-                         self.np_random.choice(opponents),
-                         Card.baron,
-                         Card.noCard, Card.noCard, player_self, 0),
-            PlayerAction(Card.guard,
-                         self.np_random.choice(opponents),
-                         Card.handmaid,
-                         Card.noCard, Card.noCard, player_self, 0),
-            PlayerAction(Card.guard,
-                         self.np_random.choice(opponents),
-                         Card.prince,
-                         Card.noCard, Card.noCard, player_self, 0),
-            PlayerAction(Card.guard,
-                         self.np_random.choice(opponents),
-                         Card.king,
-                         Card.noCard, Card.noCard, player_self, 0),
-            PlayerAction(Card.guard,
-                         self.np_random.choice(opponents),
-                         Card.countess,
-                         Card.noCard, Card.noCard, player_self, 0),
-            PlayerAction(Card.guard,
-                         self.np_random.choice(opponents),
-                         Card.princess,
-                         Card.noCard, Card.noCard, player_self, 0),
-            PlayerAction(Card.priest,
-                         self.np_random.choice(opponents),
-                         Card.noCard,
-                         Card.noCard, Card.noCard, player_self, 0),
-            PlayerAction(Card.baron,
-                         self.np_random.choice(opponents),
-                         Card.noCard,
-                         Card.noCard, Card.noCard, player_self, 0),
-            PlayerAction(Card.king,
-                         self.np_random.choice(opponents),
-                         Card.noCard,
-                         Card.noCard, Card.noCard, player_self, 0),
-            PlayerAction(Card.prince,
-                         self.np_random.choice(opponents),
-                         Card.noCard,
-                         Card.noCard, Card.noCard, player_self, 0),
+        possible_actions = [
+            # Actions always targeting the current player
             PlayerAction(Card.prince, player_self, Card.noCard, Card.noCard, Card.noCard, player_self, 0),
             PlayerAction(Card.handmaid, player_self, Card.noCard, Card.noCard, Card.noCard, player_self, 0),
             PlayerAction(Card.countess, player_self, Card.noCard, Card.noCard, Card.noCard, player_self, 0),
             PlayerAction(Card.princess, player_self, Card.noCard, Card.noCard, Card.noCard, player_self, 0)
         ]
+        for rel_idx in range(len(game._players)):
+            target_idx = game.absolute_player_idx(rel_idx, player_self)
 
-        return actions_possible
+            possible_actions.extend([
+                PlayerAction(Card.guard,
+                             target_idx,
+                             Card.priest,
+                             Card.noCard, Card.noCard, player_self, 0),
+                PlayerAction(Card.guard,
+                             target_idx,
+                             Card.baron,
+                             Card.noCard, Card.noCard, player_self, 0),
+                PlayerAction(Card.guard,
+                             target_idx,
+                             Card.handmaid,
+                             Card.noCard, Card.noCard, player_self, 0),
+                PlayerAction(Card.guard,
+                             target_idx,
+                             Card.prince,
+                             Card.noCard, Card.noCard, player_self, 0),
+                PlayerAction(Card.guard,
+                             target_idx,
+                             Card.king,
+                             Card.noCard, Card.noCard, player_self, 0),
+                PlayerAction(Card.guard,
+                             target_idx,
+                             Card.countess,
+                             Card.noCard, Card.noCard, player_self, 0),
+                PlayerAction(Card.guard,
+                             target_idx,
+                             Card.princess,
+                             Card.noCard, Card.noCard, player_self, 0),
+                PlayerAction(Card.priest,
+                             target_idx,
+                             Card.noCard,
+                             Card.noCard, Card.noCard, player_self, 0),
+                PlayerAction(Card.baron,
+                             target_idx,
+                             Card.noCard,
+                             Card.noCard, Card.noCard, player_self, 0),
+                PlayerAction(Card.king,
+                             target_idx,
+                             Card.noCard,
+                             Card.noCard, Card.noCard, player_self, 0),
+                PlayerAction(Card.prince,
+                             target_idx,
+                             Card.noCard,
+                             Card.noCard, Card.noCard, player_self, 0)
+                ])
+
+        return possible_actions

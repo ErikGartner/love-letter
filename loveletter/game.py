@@ -174,11 +174,28 @@ class Game():
                                 self.state_action_log()])
         return state
 
+    def relative_player_idx(self, player_idx, observing_player):
+        """
+        Takes a player index and returns as a relative index
+        to the observing player. The observing player
+        always sees itself as player 0.
+        """
+        return (player_idx - observing_player) % len(self._players)
+
+    def absolute_player_idx(self, relative_player_idx, observing_player):
+        """
+        Translates a relative player index to the absolute player index.
+        """
+        return (relative_player_idx + observing_player) % len(self._players)
+
     def state_action_log(self, observing_player=None):
+        """
+        Creates the state representation of the action log.
+        """
         if observing_player is None:
             observing_player = self.player_turn()
         #print(self.player_turn())
-        log = list(reversed([self.action_to_np(action, observing_player)
+        log = list(reversed([self._action_to_np(action, observing_player)
                         for action in self._action_log]))
         if len(log) == 0:
             return np.zeros(15 * 88)
@@ -186,18 +203,20 @@ class Game():
                             'constant').flatten()
         return padded_log
 
-    def action_to_np(self, action, observing_player):
+    def _action_to_np(self, action, observing_player):
 
         player = np.zeros(4)
         # Relative player index (maybe?)
-        player_index = (action.player - observing_player) % len(self._players)
+        player_index = self.relative_player_idx(action.player,
+                                                observing_player)
         player[player_index] = 1
 
         played_card = np.zeros(8)
         played_card[action.discard - 1] = 1
 
         target = np.zeros(4)
-        target_index = (action.player_target - observing_player) % len(self._players)
+        target_index = self.relative_player_idx(action.player_target,
+                                                observing_player)
         target[target_index] = 1
 
         guessed_card = np.zeros(8)
@@ -206,20 +225,17 @@ class Game():
 
         force_discard = np.zeros(32)
         if action.force_discarded > 0:
-            i = (action.force_discarder - observing_player) % len(self._players)
+            i = self.relative_player_idx(action.force_discarder, observing_player)
             force_discard[i*8 + action.force_discarded-1] = 1
 
         revealed_card = np.zeros(32)
         if action.revealed_card > 0:
-            i = (action.player_target - observing_player) % len(self._players)
+            i = self.relative_player_idx(action.player_target, observing_player)
             revealed_card[i*8 + action.revealed_card-1] = 1
 
         log_bits = np.concatenate([player, played_card, target, guessed_card,
                                    force_discard, revealed_card])
-        #print(action, log_bits, action.player, observing_player)
         return log_bits
-
-
 
     def _reward(self, game, action):
         """
