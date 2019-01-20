@@ -347,7 +347,6 @@ class Game():
         current_players = Game._set_player(
             self._players, player, self.player_turn())
 
-
         return Game(deck_new, current_players, self._turn_index + 1,
                     [*self._action_log, action_updated])
 
@@ -371,6 +370,12 @@ class Game():
                                                  force_discarder=action.player_target)
             else:
                 action_updated = action._replace(player=self.player_turn())
+
+        elif player_hand_new == card_target:
+            # Tie, nobody wins
+            action_updated = action._replace(player=self.player_turn(),
+                                             revealed_card=card_target)
+
         else:
             # player is eliminated
             player = PlayerTools.force_discard(self.player(), player_hand_new)
