@@ -479,6 +479,10 @@ class Game():
         if not PlayerTools.is_playing(target_player):
             return False
 
+        # Check if target is defender (and not the current player)
+        if PlayerTools.is_defended(target_player) and player != target_player:
+            return False
+
         # Cannot guess guard or no card
         if action.discard == Card.guard and (
                 action.guess == Card.guard or action.guess == Card.noCard):
