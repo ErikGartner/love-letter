@@ -36,8 +36,14 @@ parser.add_argument('--load-name', default=None, metavar='SN',
 parser.add_argument('--log-dir', default="./tensorboard/", metavar='path',
                     help='path to the tensorboard log directory')
 
-def callback(local, globa):
-    return True
+
+class CustomPolicy(FeedForwardPolicy):
+    def __init__(self, *args, **kwargs):
+        super(CustomPolicy, self).__init__(*args, **kwargs,
+                                           net_arch=[512, dict(pi=[256, 128],
+                                                               vf=[256, 128])],
+                                           feature_extraction="mlp")
+
 
 if __name__ == '__main__':
     args = parser.parse_args()
@@ -49,18 +55,19 @@ if __name__ == '__main__':
         env = SubprocVecEnv([lambda: LoveLetterEnv(AgentRandom(args.seed + i))
                              for i in range(args.num_processes)])
 
-    model = PPO2(MlpPolicy,
+    model = PPO2(CustomPolicy,
                  env,
                  verbose=0,
                  tensorboard_log=args.log_dir,
                  learning_rate=args.lr,
                  n_steps=args.num_steps,
-                 nminibatches=5)
+                 nminibatches=5,
+                 policy_kwargs=policy_kwargs)
 
     if args.load_name:
         model.load(args.load_name)
 
     model.learn(total_timesteps=int(args.total_steps),
-                callback=callback,
+                callback=None,
                 tb_log_name='PPO2 %s' % datetime.datetime.now().strftime('%H-%M-%S'))
     model.save(args.save_name)

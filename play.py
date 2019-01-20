@@ -50,7 +50,7 @@ def get_action():
     discard = get_int("Discard Card")
     player_target = get_int("Player Target")
     guess = get_int("Guessed Card") if discard == Card.guard else 0
-    return PlayerAction(discard, player_target, guess, 0)
+    return PlayerAction(discard, player_target, guess, 0, 0, 0, 0)
 
 
 def play(seed, previous_actions):
