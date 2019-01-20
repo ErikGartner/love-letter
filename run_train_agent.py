@@ -69,5 +69,6 @@ if __name__ == '__main__':
 
     model.learn(total_timesteps=int(args.total_steps),
                 callback=None,
+                log_interval=1000,
                 tb_log_name='PPO2 %s' % datetime.datetime.now().strftime('%H-%M-%S'))
     model.save(args.save_name)
