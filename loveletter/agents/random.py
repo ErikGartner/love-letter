@@ -23,6 +23,7 @@ class AgentRandom(Agent):
 
         options = Agent.valid_actions(game, seed)
         if len(options) < 1:
+            print('\n'.join(game.to_str()))
             raise Exception("Unable to play without actions")
 
         return random.choice(options)

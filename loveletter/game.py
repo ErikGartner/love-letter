@@ -472,7 +472,15 @@ class Game():
 
         # cannot mis-target a card
         if self.player_turn() == action.player_target and action.discard in Card.only_other:
-            return False
+            # Check if self is the only valid target due to everybody else protected (or dead)
+            other_players_invalid = [PlayerTools.is_defended(p) or not PlayerTools.is_playing(p)
+                                     for p in self._players if p != self.player()]
+
+            if all(other_players_invalid):
+                return True
+            else:
+                return False
+
         if self.player_turn() != action.player_target and action.discard in Card.only_self:
             return False
 

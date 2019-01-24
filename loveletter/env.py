@@ -7,12 +7,12 @@ import numpy as np
 
 from .game import Game
 from .card import Card
-from .player import PlayerAction, PlayerTools
+from .player import PlayerAction, PlayerTools, PlayerActionTools
 from .agents.random import AgentRandom
 
 
 NBR_PLAYERS = 4
-NBR_ACTIONS = 11 * NBR_PLAYERS + NBR_PLAYERS
+NBR_ACTIONS = 11 * NBR_PLAYERS + 8
 SPACE_SIZE = 1344 + NBR_ACTIONS
 
 REWARD_WIN = 1
@@ -164,6 +164,11 @@ class LoveLetterEnv(gym.Env):
 
         possible_actions = [
             # Actions always targeting the current player
+            PlayerAction(Card.king, player_self, Card.noCard, Card.noCard, Card.noCard, player_self, 0),
+            PlayerAction(Card.guard, player_self, Card.noCard, Card.noCard, Card.noCard, player_self, 0),
+            PlayerAction(Card.priest, player_self, Card.noCard, Card.noCard, Card.noCard, player_self, 0),
+            PlayerAction(Card.baron, player_self, Card.noCard, Card.noCard, Card.noCard, player_self, 0),
+
             PlayerAction(Card.prince, player_self, Card.noCard, Card.noCard, Card.noCard, player_self, 0),
             PlayerAction(Card.handmaid, player_self, Card.noCard, Card.noCard, Card.noCard, player_self, 0),
             PlayerAction(Card.countess, player_self, Card.noCard, Card.noCard, Card.noCard, player_self, 0),
