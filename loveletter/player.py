@@ -138,6 +138,7 @@ class PlayerTools():
         for idx, action in enumerate(actions):
             if action.discard == Card.noCard:
                 return idx
+        print(actions)
         raise Exception("Insufficient space in actions")
 
     @staticmethod
